@@ -1,6 +1,9 @@
 #!/bin/bash
 set -x
 
+# Fix CUDA compat library conflict on Jetson Docker
+export LD_LIBRARY_PATH=/usr/local/lib/python3.10/dist-packages/tvm:/usr/local/cuda/lib64:
+
 # Check if a model parameter was provided
 if [ $# -eq 0 ]; then
     echo "Usage: $0 <model> <lora_count>"

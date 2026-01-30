@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "gamma": "^1.0.0",
+    "progress": "^2.0.3"
+  }
+}
