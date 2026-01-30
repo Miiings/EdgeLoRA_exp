@@ -2754,13 +2754,14 @@ struct llama_init_result llama_init_from_gpt_params(gpt_params & params) {
         num_lora += la.repeat;
     }
     llama_lazy_lora_adapters_register(lctx, iparams.lazy_lora_adapters);
-    if (params.adapter_cache_size > 0) {
+    if (params.adapter_cache_size > 0 && num_lora > 0) {
         std::vector<int> adapter_ids;
         for (int i = 0; i < num_lora; i++) {
             adapter_ids.push_back(i);
         }
         std::random_shuffle(adapter_ids.begin(), adapter_ids.end());
-        for (int i = 0; i < params.adapter_cache_size; i++) {
+        int cache_count = std::min(params.adapter_cache_size, (int)adapter_ids.size());
+        for (int i = 0; i < cache_count; i++) {
             fprintf(stdout, "caching LoRA adapter %d\n", adapter_ids[i]);
             llama_lazy_load_lora_adapter(lctx, adapter_ids[i]);
             llama_lora_adapter_release(lctx, adapter_ids[i]);
