@@ -3205,12 +3205,27 @@ int main(int argc, char ** argv) {
 
     const auto handle_lora_adapters_list = [&](const httplib::Request &, httplib::Response & res) {
         json result = json::array();
+        // Include regular lora_adapters (from --lora option)
         for (size_t i = 0; i < ctx_server.lora_adapters.size(); ++i) {
             auto & la = ctx_server.lora_adapters[i];
             result.push_back({
                 {"id", i},
                 {"path", la.path},
                 {"scale", la.scale},
+                {"type", "regular"},
+            });
+        }
+        // Include lazy_lora_adapters (from --lora_repeated option)
+        // Note: lazy adapter IDs are separate from regular adapter IDs
+        // Use "adapter_id" in completion requests to select a lazy adapter
+        for (size_t i = 0; i < ctx_server.lazy_lora_adapters.size(); ++i) {
+            auto & la = ctx_server.lazy_lora_adapters[i];
+            result.push_back({
+                {"id", i},
+                {"path", la->path},
+                {"scale", 0.0f},  // lazy adapters are applied per-request
+                {"loaded", la->loaded.load()},
+                {"type", "lazy"},
             });
         }
         res_ok(res, result);

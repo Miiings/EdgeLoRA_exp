@@ -67,31 +67,20 @@ function generateRequests(params) {
     return requests;
 }
 
-async function setLoraAdapterScales(adapter_id, numAdapters) {
-    // Create array of adapter configs
-    const adapterConfigs = Array(numAdapters).fill(0).map((_, idx) => ({
-        id: idx,
-        scale: idx === adapter_id ? 1.0 : 0.0
-    }));
-
-    // Call LoRA adapters endpoint
-    try {
-        const response = await fetch("http://127.0.0.1:8080/lora-adapters", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(adapterConfigs)
-        });
-
-        // console.log(JSON.stringify(adapterConfigs))
-        
-        if (!response.ok) {
-            throw new Error(`Failed to set LoRA adapters: ${response.statusText}`);
-        }
-    } catch (error) {
-        console.error('Error setting LoRA adapters:', error);
-        throw error;
-    }
-}
+// Note: setLoraAdapterScales is for regular --lora adapters (global scale setting)
+// For lazy adapters (--lora_repeated), use adapter_id in completion request instead
+// async function setLoraAdapterScales(adapter_id, numAdapters) {
+//     const adapterConfigs = Array(numAdapters).fill(0).map((_, idx) => ({
+//         id: idx,
+//         scale: idx === adapter_id ? 1.0 : 0.0
+//     }));
+//     const response = await fetch("http://127.0.0.1:8080/lora-adapters", {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify(adapterConfigs)
+//     });
+//     if (!response.ok) throw new Error(`Failed to set LoRA adapters: ${response.statusText}`);
+// }
 
 async function generateWorkload() {
     const startTime = Date.now();
@@ -135,14 +124,14 @@ async function generateWorkload() {
             const prompt = "Hello ".repeat(req.inputLength).trim();
             const requestStartTime = performance.now();
 
-            await setLoraAdapterScales(req.adapter_id, n);
-            
+            // For lazy LoRA adapters, pass adapter_id directly in completion request
             const response = await fetch("http://127.0.0.1:8080/completion", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     prompt,
                     n_predict: req.outputLength,
+                    adapter_id: req.adapter_id,
                 })
             });
 
